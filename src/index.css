@@ -1,0 +1,598 @@
+/* ESPN design system tokens (CSS variables) */
+:root {
+  /* Brand */
+  --espn-red: #e31837;
+  --espn-red-dark: #b8142c;
+  --espn-black: #0d0d0d;
+  --espn-gray-900: #1a1a1a;
+  --espn-gray-800: #2d2d2d;
+  --espn-gray-700: #404040;
+  --espn-gray-500: #737373;
+  --espn-gray-400: #a3a3a3;
+  --espn-white: #ffffff;
+  /* Semantic - avoid pure black for a polished look */
+  --espn-bg-page: #0c1222;
+  --espn-bg-surface: #161d2e;
+  --espn-bg-elevated: #1e2738;
+  --espn-text-primary: #ffffff;
+  --espn-text-secondary: #a3a3a3;
+  --espn-border: #404040;
+  --espn-success: #22c55e;
+  --espn-error: #ef4444;
+  /* Spacing */
+  --espn-space-4: 4px;
+  --espn-space-6: 6px;
+  --espn-space-8: 8px;
+  --espn-space-10: 10px;
+  --espn-space-12: 12px;
+  --espn-space-16: 16px;
+  --espn-space-24: 24px;
+  --espn-space-32: 32px;
+  --espn-space-40: 40px;
+  /* Typography - ESPN-style stack (use Helvetica Neue when ESPN font not loaded) */
+  --espn-font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --espn-font-heading: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--espn-font-sans);
+  background: var(--espn-bg-page);
+  color: var(--espn-text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Background: layered gradients + subtle texture (no solid black) */
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background:
+    /* Subtle noise overlay for depth */
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"),
+    /* Red/orange brand glow at top */
+    radial-gradient(ellipse 140% 100% at 50% -30%, rgba(227, 24, 55, 0.15) 0%, transparent 55%),
+    /* Soft warm accent mid-top */
+    radial-gradient(ellipse 100% 60% at 70% 20%, rgba(60, 50, 80, 0.25) 0%, transparent 50%),
+    /* Main gradient: dark navy → slate (no black) */
+    linear-gradient(180deg, #0f1629 0%, #131b2e 25%, #161f35 50%, #141c30 75%, #0e1420 100%);
+  background-attachment: fixed;
+}
+
+.app-layout::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 80% 50% at 50% 100%, rgba(0, 0, 0, 0.15) 0%, transparent 60%);
+  z-index: 0;
+}
+
+.app-layout > * {
+  position: relative;
+  z-index: 1;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--espn-space-16) var(--espn-space-16) var(--espn-space-32);
+}
+
+/* Banner ad */
+.banner-ad {
+  background: var(--espn-bg-surface);
+  border-bottom: 1px solid var(--espn-border);
+  padding: var(--espn-space-8) var(--espn-space-16);
+}
+
+.banner-ad-inner {
+  max-width: 728px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--espn-space-4);
+}
+
+/* Banner ad — DraftKings */
+.banner-ad--draftkings {
+  background: #0d0d0d;
+  border-bottom: 1px solid #222;
+}
+
+.banner-ad--draftkings .banner-ad-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espn-space-16);
+  max-width: 728px;
+  margin: 0 auto;
+  padding: var(--espn-space-10) var(--espn-space-16);
+  min-height: 72px;
+  text-decoration: none;
+  color: #fff;
+  transition: opacity 0.2s;
+}
+
+.banner-ad--draftkings .banner-ad-link:hover {
+  opacity: 0.95;
+}
+
+.banner-ad--draftkings .banner-ad-brand {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #53b375;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+
+.banner-ad--draftkings .banner-ad-headline {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e5e5e5;
+  flex: 1;
+  text-align: center;
+}
+
+.banner-ad--draftkings .banner-ad-cta {
+  display: inline-block;
+  padding: 10px 20px;
+  background: #53b375;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.banner-ad-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--espn-text-secondary);
+}
+
+.banner-ad-placeholder {
+  width: 100%;
+  max-width: 728px;
+  height: 90px;
+  background: var(--espn-bg-elevated);
+  border: 1px dashed var(--espn-border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--espn-gray-500);
+  font-size: 14px;
+}
+
+/* Terms footer (ESPN-style) */
+.terms-footer {
+  background: var(--espn-bg-surface);
+  border-top: 1px solid var(--espn-border);
+  padding: var(--espn-space-24) var(--espn-space-16);
+  margin-top: auto;
+}
+
+.terms-footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.terms-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--espn-space-4);
+  margin-bottom: var(--espn-space-12);
+}
+
+.terms-link {
+  color: var(--espn-text-secondary);
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.terms-link:hover {
+  color: var(--espn-red);
+  text-decoration: underline;
+}
+
+.terms-sep {
+  color: var(--espn-gray-500);
+  font-size: 12px;
+  user-select: none;
+}
+
+.terms-copyright {
+  margin: 0;
+  font-size: 11px;
+  color: var(--espn-gray-500);
+}
+
+/* Game screen */
+.game-screen {
+  width: 100%;
+  max-width: 640px;
+  position: relative;
+}
+
+.round-complete-toast {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--espn-space-12) var(--espn-space-24);
+  background: var(--espn-success);
+  color: var(--espn-white);
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: 8px;
+  z-index: 10;
+  animation: round-complete-fade 0.2s ease-out;
+}
+
+@keyframes round-complete-fade {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.game-header {
+  text-align: center;
+  margin-bottom: var(--espn-space-24);
+}
+
+.game-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espn-space-12);
+  font-family: var(--espn-font-heading);
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 var(--espn-space-16);
+  color: var(--espn-text-primary);
+  letter-spacing: -0.02em;
+}
+
+.game-title-shield {
+  width: 56px;
+  height: 67px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.nfl-shield-wrapper .game-title-shield {
+  width: 56px;
+  height: 67px;
+}
+
+/* Round carousel */
+.round-carousel {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--espn-space-8);
+  margin-bottom: var(--espn-space-12);
+}
+
+.round-carousel-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--espn-bg-elevated);
+  border: 2px solid var(--espn-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--espn-text-secondary);
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.round-carousel-dot.current {
+  background: var(--espn-red);
+  border-color: var(--espn-red);
+  color: var(--espn-white);
+}
+
+.round-carousel-dot.passed {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: var(--espn-success);
+  color: var(--espn-success);
+}
+
+.round-carousel-check {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.round-carousel-num {
+  line-height: 1;
+}
+
+.round-label {
+  margin: 0 0 var(--espn-space-8);
+  color: var(--espn-text-secondary);
+  font-size: 0.875rem;
+}
+
+.round-counts {
+  font-weight: 500;
+  color: var(--espn-gray-400);
+  font-size: 0.8125rem;
+}
+
+/* Strike countdown */
+.strike-countdown {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espn-space-8);
+  flex-wrap: wrap;
+}
+
+.strike-label {
+  font-size: 0.875rem;
+  color: var(--espn-text-secondary);
+}
+
+.strike-value {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--espn-text-primary);
+}
+
+.strike-dots {
+  display: flex;
+  gap: var(--espn-space-4);
+  margin-left: var(--espn-space-4);
+}
+
+.strike-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--espn-bg-elevated);
+  border: 1px solid var(--espn-border);
+}
+
+.strike-dot.used {
+  background: var(--espn-error);
+  border-color: var(--espn-error);
+}
+
+/* Round view + question (centered, animate in) */
+.round-view {
+  margin-top: var(--espn-space-8);
+  animation: questionIn 0.35s ease-out;
+}
+
+@keyframes questionIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.question-text {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  margin: 0 0 var(--espn-space-24);
+  color: var(--espn-text-primary);
+  padding: 0 var(--espn-space-8);
+}
+
+/* Box grid */
+.box-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--espn-space-12);
+}
+
+.box-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espn-space-6);
+  padding: var(--espn-space-12);
+  padding-top: 52px;
+  background: var(--espn-bg-surface);
+  border: 1px solid var(--espn-border);
+  border-radius: 12px;
+  cursor: pointer;
+  color: inherit;
+  font-size: 0.8125rem;
+  text-align: center;
+  min-height: 160px;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+  --box-team-color: #404040;
+}
+
+.box-cell:hover:not(:disabled) {
+  border-color: var(--box-team-color);
+  background: var(--espn-bg-elevated);
+  transform: translateY(-2px);
+}
+
+.box-cell:disabled {
+  cursor: default;
+}
+
+.box-cell.revealed {
+  cursor: default;
+}
+
+.box-cell.revealed.safe {
+  border-color: var(--espn-success);
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.box-cell.revealed.mine {
+  border-color: var(--espn-error);
+  background: rgba(239, 68, 68, 0.12);
+}
+
+/* Glow INSIDE container: wrappers around logo and headshot */
+.box-cell-glow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  box-shadow: 0 0 16px 4px color-mix(in srgb, var(--box-team-color) 50%, transparent);
+  transition: box-shadow 0.2s;
+}
+
+.box-cell:hover:not(:disabled) .box-cell-glow {
+  box-shadow: 0 0 20px 6px color-mix(in srgb, var(--box-team-color) 60%, transparent);
+}
+
+.box-cell-logo-glow {
+  position: absolute;
+  top: var(--espn-space-8);
+  left: var(--espn-space-8);
+  padding: 4px;
+}
+
+/* Team cells: logo large and centered, nickname below (no absolute positioning) */
+.box-cell--team {
+  padding-top: var(--espn-space-12);
+}
+
+.box-cell--team .box-cell-team-logo-glow {
+  position: static;
+  padding: 8px;
+}
+
+.box-cell--team .box-cell-team-logo {
+  width: 64px;
+  height: 64px;
+}
+
+.box-cell-headshot-glow {
+  padding: 4px;
+}
+
+.box-cell.revealed.safe .box-cell-glow {
+  box-shadow: 0 0 12px 3px color-mix(in srgb, var(--espn-success) 45%, transparent);
+}
+
+.box-cell.revealed.mine .box-cell-glow {
+  box-shadow: 0 0 12px 3px color-mix(in srgb, var(--espn-error) 45%, transparent);
+}
+
+.box-cell-logo {
+  width: 40px;
+  height: 40px;
+  display: block;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.box-cell-headshot {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  display: block;
+  border-radius: 4px;
+}
+
+.box-cell-name {
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1.2;
+  color: var(--espn-text-primary);
+}
+
+.box-cell-name--team {
+  margin-top: 0;
+}
+
+.box-cell-meta {
+  font-size: 0.75rem;
+  color: var(--espn-text-secondary);
+}
+
+.box-cell-result {
+  position: absolute;
+  top: var(--espn-space-4);
+  right: var(--espn-space-4);
+  font-size: 1.125rem;
+}
+
+/* End screen */
+.end-screen {
+  max-width: 420px;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--espn-space-32) var(--espn-space-24);
+  text-align: center;
+}
+
+.end-screen .end-screen-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espn-space-12);
+  font-size: 1.75rem;
+  margin: 0 0 var(--espn-space-24);
+  color: var(--espn-text-primary);
+}
+
+.end-title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  margin: 0 0 var(--espn-space-8);
+  color: var(--espn-text-primary);
+}
+
+.end-detail {
+  color: var(--espn-text-secondary);
+  margin: 0 0 var(--espn-space-16);
+  font-size: 0.9375rem;
+}
+
+.end-stats {
+  font-size: 0.875rem;
+  color: var(--espn-text-secondary);
+  margin: 0 0 var(--espn-space-8);
+}
+
+.end-note {
+  font-size: 0.75rem;
+  color: var(--espn-gray-500);
+  margin: 0;
+}
