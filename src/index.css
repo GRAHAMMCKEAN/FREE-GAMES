@@ -159,9 +159,18 @@ body {
 .banner-ad-brand {
   font-size: 1.25rem;
   font-weight: 800;
-  color: #53b375;
   letter-spacing: -0.02em;
   flex-shrink: 0;
+}
+
+/* Spotify-style leaderboard (dark bg, green accent) */
+.banner-ad-spotify .banner-ad-brand {
+  color: #1DB954;
+}
+
+.banner-ad-spotify .banner-ad-cta {
+  background: #1DB954;
+  color: #000;
 }
 
 .banner-ad-headline {
@@ -176,7 +185,6 @@ body {
 .banner-ad-cta {
   display: inline-block;
   padding: 8px 18px;
-  background: #53b375;
   color: #fff;
   font-size: 0.8125rem;
   font-weight: 700;

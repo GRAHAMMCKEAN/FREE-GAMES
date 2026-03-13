@@ -14,16 +14,16 @@ export function BannerAd() {
       <span className="banner-ad-disclosure" aria-hidden="true">
         Ad
       </span>
-      <div className="banner-ad-container">
+      <div className="banner-ad-container banner-ad-spotify">
         <a
-          href="https://www.draftkings.com"
+          href="https://www.spotify.com"
           target="_blank"
           rel="noopener noreferrer sponsored"
           className="banner-ad-link"
         >
-          <span className="banner-ad-brand">DraftKings</span>
-          <span className="banner-ad-headline">Get in the game. Bet on NFL.</span>
-          <span className="banner-ad-cta">Sign up</span>
+          <span className="banner-ad-brand">Spotify</span>
+          <span className="banner-ad-headline">Music and podcasts for everyone. Listen free.</span>
+          <span className="banner-ad-cta">Get Spotify Free</span>
         </a>
       </div>
     </aside>
