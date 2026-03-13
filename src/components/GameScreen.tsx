@@ -7,9 +7,11 @@ import { NflShield } from './NflShield';
 interface GameScreenProps {
   game: Game;
   gameState: UseGameSessionReturn;
+  /** Formatted date (e.g. "March 5, 2025") */
+  dateLabel: string;
 }
 
-export function GameScreen({ game, gameState }: GameScreenProps) {
+export function GameScreen({ game, gameState, dateLabel }: GameScreenProps) {
   const { currentRound, strikesLeft, session } = gameState;
   const currentIndex = session.currentRoundIndex;
   const roundCompletePending = session.roundCompletePending === true;
@@ -24,10 +26,13 @@ export function GameScreen({ game, gameState }: GameScreenProps) {
         </div>
       )}
       <header className="game-header">
-        <h1 className="game-title">
-          <NflShield className="game-title-shield" />
-          NFL Minefield
-        </h1>
+        <div className="game-header-top">
+          <h1 className="game-title">
+            <NflShield className="game-title-shield" />
+            NFL Minefield
+          </h1>
+          <p className="game-date" aria-live="polite">{dateLabel}</p>
+        </div>
         <div className="round-carousel">
           {game.rounds.map((round, i) => {
             const isCurrent = i === currentIndex;

@@ -5,9 +5,11 @@ interface EndScreenProps {
   game: Game;
   session: GameSession;
   status: GameSession['status'];
+  /** Formatted date (e.g. "March 5, 2025") */
+  dateLabel: string;
 }
 
-export function EndScreen({ game, session, status }: EndScreenProps) {
+export function EndScreen({ game, session, status, dateLabel }: EndScreenProps) {
   const completed = session.status === 'completed';
   const roundsCompleted = completed ? game.rounds.length : session.currentRoundIndex;
 
@@ -17,6 +19,7 @@ export function EndScreen({ game, session, status }: EndScreenProps) {
         <NflShield className="game-title-shield" />
         NFL Minefield
       </h1>
+      <p className="end-screen-date" aria-live="polite">{dateLabel}</p>
       {status === 'completed' ? (
         <>
           <p className="end-title">You made it!</p>

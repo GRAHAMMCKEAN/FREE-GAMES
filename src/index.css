@@ -95,47 +95,68 @@ body {
   padding: var(--espn-space-16) var(--espn-space-16) var(--espn-space-32);
 }
 
-/* Banner ad */
+/* Banner ad — IAB standard dimensions and best practices */
 .banner-ad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   background: var(--espn-bg-surface);
   border-bottom: 1px solid var(--espn-border);
   padding: var(--espn-space-8) var(--espn-space-16);
 }
 
-.banner-ad-inner {
-  max-width: 728px;
+/* Ad disclosure (IAB/LEAN: transparent labeling) */
+.banner-ad-disclosure {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--espn-gray-500);
+  margin-bottom: 4px;
+}
+
+/* IAB Leaderboard 728×90 (desktop); Mobile Leaderboard 320×50 (narrow) */
+.banner-ad-container {
+  width: 728px;
+  max-width: 100%;
+  height: 90px;
   margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--espn-space-4);
-}
-
-/* Banner ad — DraftKings */
-.banner-ad--draftkings {
   background: #0d0d0d;
-  border-bottom: 1px solid #222;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-.banner-ad--draftkings .banner-ad-link {
+@media (max-width: 728px) {
+  .banner-ad-container {
+    width: 320px;
+    height: 50px;
+  }
+}
+
+.banner-ad-link {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--espn-space-16);
-  max-width: 728px;
-  margin: 0 auto;
-  padding: var(--espn-space-10) var(--espn-space-16);
-  min-height: 72px;
+  width: 100%;
+  height: 100%;
+  padding: 0 var(--espn-space-16);
   text-decoration: none;
-  color: #fff;
-  transition: opacity 0.2s;
+  color: var(--espn-text-primary);
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+  box-sizing: border-box;
 }
 
-.banner-ad--draftkings .banner-ad-link:hover {
-  opacity: 0.95;
+.banner-ad-link:hover {
+  background-color: rgba(255, 255, 255, 0.04);
 }
 
-.banner-ad--draftkings .banner-ad-brand {
+.banner-ad-link:focus-visible {
+  outline: 2px solid var(--espn-red);
+  outline-offset: 2px;
+}
+
+.banner-ad-brand {
   font-size: 1.25rem;
   font-weight: 800;
   color: #53b375;
@@ -143,44 +164,45 @@ body {
   flex-shrink: 0;
 }
 
-.banner-ad--draftkings .banner-ad-headline {
+.banner-ad-headline {
   font-size: 1rem;
   font-weight: 600;
-  color: #e5e5e5;
+  color: var(--espn-text-secondary);
   flex: 1;
   text-align: center;
+  min-width: 0;
 }
 
-.banner-ad--draftkings .banner-ad-cta {
+.banner-ad-cta {
   display: inline-block;
-  padding: 10px 20px;
+  padding: 8px 18px;
   background: #53b375;
   color: #fff;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   border-radius: 4px;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.banner-ad-label {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--espn-text-secondary);
-}
+@media (max-width: 728px) {
+  .banner-ad-link {
+    gap: var(--espn-space-8);
+    padding: 0 var(--espn-space-12);
+  }
 
-.banner-ad-placeholder {
-  width: 100%;
-  max-width: 728px;
-  height: 90px;
-  background: var(--espn-bg-elevated);
-  border: 1px dashed var(--espn-border);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--espn-gray-500);
-  font-size: 14px;
+  .banner-ad-brand {
+    font-size: 1rem;
+  }
+
+  .banner-ad-headline {
+    font-size: 0.8125rem;
+  }
+
+  .banner-ad-cta {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+  }
 }
 
 /* Terms footer (ESPN-style) */
@@ -264,6 +286,16 @@ body {
 .game-header {
   text-align: center;
   margin-bottom: var(--espn-space-24);
+}
+
+.game-header-top {
+  margin-bottom: var(--espn-space-12);
+}
+
+.game-date {
+  font-size: 0.9375rem;
+  color: var(--espn-text-secondary);
+  margin: 0 0 var(--espn-space-8);
 }
 
 .game-title {
@@ -568,8 +600,14 @@ body {
   justify-content: center;
   gap: var(--espn-space-12);
   font-size: 1.75rem;
-  margin: 0 0 var(--espn-space-24);
+  margin: 0 0 var(--espn-space-16);
   color: var(--espn-text-primary);
+}
+
+.end-screen-date {
+  font-size: 0.9375rem;
+  color: var(--espn-text-secondary);
+  margin: 0 0 var(--espn-space-24);
 }
 
 .end-title {
@@ -594,5 +632,61 @@ body {
 .end-note {
   font-size: 0.75rem;
   color: var(--espn-gray-500);
+  margin: 0;
+}
+
+/* Played today / Check back tomorrow */
+.played-today-screen {
+  max-width: 420px;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--espn-space-32) var(--espn-space-24);
+  text-align: center;
+}
+
+.played-today-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espn-space-12);
+  font-size: 1.75rem;
+  margin: 0 0 var(--espn-space-16);
+  color: var(--espn-text-primary);
+}
+
+.played-today-date {
+  font-size: 0.9375rem;
+  color: var(--espn-text-secondary);
+  margin: 0 0 var(--espn-space-24);
+}
+
+.played-today-check {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto var(--espn-space-24);
+  border-radius: 50%;
+  background: var(--espn-success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.played-today-check-icon {
+  color: #fff;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.played-today-message {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 var(--espn-space-8);
+  color: var(--espn-text-primary);
+}
+
+.played-today-cta {
+  font-size: 0.9375rem;
+  color: var(--espn-text-secondary);
   margin: 0;
 }

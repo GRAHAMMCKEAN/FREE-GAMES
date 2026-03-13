@@ -5,6 +5,8 @@ import { createInitialSession, MAX_STRIKES, ROUNDS_PER_GAME } from '../types/nfl
 /** Delay (ms) before auto-advancing to next round after clearing — no continue button. */
 const AUTO_ADVANCE_MS = 1200;
 
+export const LAST_PLAYED_DATE_KEY = 'nfl-minefield-lastPlayedDate';
+
 export interface UseGameSessionReturn {
   session: GameSession;
   currentRound: Round | null;
@@ -62,6 +64,17 @@ export function useGameSession(game: Game): UseGameSessionReturn {
       }
     };
   }, [session.roundCompletePending, session.status, session.currentRoundIndex, currentRound?.id]);
+
+  // Persist "played today" when game ends so we can show "Check back tomorrow" on return
+  useEffect(() => {
+    if (session.status === 'completed' || session.status === 'eliminated') {
+      try {
+        localStorage.setItem(LAST_PLAYED_DATE_KEY, game.date);
+      } catch {
+        // ignore storage errors
+      }
+    }
+  }, [session.status, game.date]);
 
   const revealBox = useCallback(
     (box: Box) => {

@@ -32,14 +32,14 @@ function hashDate(date: string): number {
   return h >>> 0;
 }
 
-/** Yesterday's date in YYYY-MM-DD (for no-repeat variant selection). */
-function yesterday(dateStr: string): string {
+/** Date N days before dateStr (YYYY-MM-DD). */
+function daysAgo(dateStr: string, n: number): string {
   const d = new Date(dateStr + 'T12:00:00Z');
-  d.setUTCDate(d.getUTCDate() - 1);
+  d.setUTCDate(d.getUTCDate() - n);
   return d.toISOString().slice(0, 10);
 }
 
-/** Returns which variant index was used for each slot on the given date (same logic as getGameForDate). */
+/** Returns which variant index was used for each slot on the given date (raw formula, no fantasy/recentYear). */
 function getVariantIndices(date: string): number[] {
   const seedBase = hashDate(date);
   const indices: number[] = [];
@@ -60,11 +60,102 @@ function getVariantIndices(date: string): number[] {
   return indices;
 }
 
-/** Pick a variant index different from prevIndex (no repeat from previous day). */
-function pickDifferentIndex(poolLength: number, prevIndex: number, seed: number): number {
+/** Pick a variant index that is not in recentIndices (avoid repeating any of the last 3 days). */
+function pickIndexNotInRecent(
+  poolLength: number,
+  recentIndices: number[],
+  seed: number
+): number {
   if (poolLength <= 1) return 0;
-  const offset = Math.abs(seed) % (poolLength - 1);
-  return (prevIndex + 1 + offset) % poolLength;
+  const avoid = new Set(recentIndices.filter((i) => i >= 0 && i < poolLength));
+  const candidates = Array.from({ length: poolLength }, (_, i) => i).filter((i) => !avoid.has(i));
+  if (candidates.length > 0) {
+    return candidates[Math.abs(seed) % candidates.length];
+  }
+  return Math.abs(seed) % poolLength;
+}
+
+/** Number of days to avoid repeating the same slot question (never re-use within this window). */
+const AVOID_REPEAT_DAYS = 7;
+
+/** Returns the actual variant indices for a date (after fantasy/recentYear rules). Uses cache to avoid recomputation. */
+function getActualVariantIndices(date: string, cache: Map<string, number[]>): number[] {
+  const cached = cache.get(date);
+  if (cached) return cached;
+
+  const seedBase = hashDate(date);
+  const prevDate = daysAgo(date, 1);
+  const prevIndices = cache.has(prevDate)
+    ? getActualVariantIndices(prevDate, cache)
+    : getVariantIndices(prevDate);
+
+  const variantIndices: number[] = [];
+  for (let roundIndex = 0; roundIndex < ROUND_POOLS.length; roundIndex++) {
+    const pool = ROUND_POOLS[roundIndex];
+    const prevIdx = prevIndices[roundIndex] ?? 0;
+    let variantIndex: number;
+    if (roundIndex === 2) {
+      const historicalStart = 2;
+      const historicalCount = 3;
+      const localPrev = prevIdx - historicalStart;
+      const localNew = pickIndexNotInRecent(
+        historicalCount,
+        [localPrev >= 0 ? localPrev : -1],
+        seedBase + roundIndex
+      );
+      variantIndex = historicalStart + localNew;
+    } else {
+      variantIndex = pickIndexNotInRecent(pool.length, [prevIdx], seedBase + roundIndex);
+    }
+    variantIndices.push(variantIndex);
+  }
+
+  applyFantasyAndRecentYearRules(variantIndices);
+  cache.set(date, variantIndices);
+  return variantIndices;
+}
+
+/** Apply at-most-one-fantasy and at-most-one-recentYear rules (mutates variantIndices). */
+function applyFantasyAndRecentYearRules(variantIndices: number[]): void {
+  const fantasySlots = variantIndices
+    .map((idx, slot) => (ROUND_POOLS[slot][idx] as RoundDef).fantasy ? slot : -1)
+    .filter((s) => s >= 0);
+  if (fantasySlots.length > 1) {
+    for (let i = 1; i < fantasySlots.length; i++) {
+      const slot = fantasySlots[i];
+      const pool = ROUND_POOLS[slot];
+      let newIdx = (variantIndices[slot] + 1) % pool.length;
+      while ((pool[newIdx] as RoundDef).fantasy && newIdx !== variantIndices[slot]) {
+        newIdx = (newIdx + 1) % pool.length;
+      }
+      if (!(pool[newIdx] as RoundDef).fantasy) variantIndices[slot] = newIdx;
+    }
+  }
+  if (fantasySlots.length === 0) {
+    const pool0 = ROUND_POOLS[0];
+    const fantasyIndices = pool0.map((d, i) => ((d as RoundDef).fantasy ? i : -1)).filter((i) => i >= 0);
+    if (fantasyIndices.length > 0) {
+      const prev0 = variantIndices[0];
+      const chosen = fantasyIndices.find((i) => i !== prev0) ?? fantasyIndices[0];
+      variantIndices[0] = chosen;
+    }
+  }
+  const MAX_RECENT_YEAR_ROUNDS = 1;
+  const slotsWithRecentYear = variantIndices
+    .map((idx, slot) => ((ROUND_POOLS[slot][idx] as RoundDef).recentYear ? slot : -1))
+    .filter((s) => s >= 0);
+  if (slotsWithRecentYear.length > MAX_RECENT_YEAR_ROUNDS) {
+    for (let i = 1; i < slotsWithRecentYear.length; i++) {
+      const slot = slotsWithRecentYear[i];
+      const pool = ROUND_POOLS[slot];
+      let newIdx = (variantIndices[slot] + 1) % pool.length;
+      let attempts = pool.length;
+      while (attempts-- > 0 && (pool[newIdx] as RoundDef).recentYear) {
+        newIdx = (newIdx + 1) % pool.length;
+      }
+      if (!(pool[newIdx] as RoundDef).recentYear) variantIndices[slot] = newIdx;
+    }
+  }
 }
 
 /** One round definition: question + boxes for a given slot (correct/incorrect counts fixed by slot). */
@@ -489,77 +580,63 @@ const ROUND_POOLS: RoundDef[][] = [
 
 /**
  * Builds the game for a given date. Same date always returns the same game (deterministic).
- * Never repeats a question from the previous day (variant index differs per slot).
+ * Does not repeat a slot's question on any of the last AVOID_REPEAT_DAYS days (e.g. 7 days).
  * At most 1 fantasy round per game; slots 2 and 3 always historical.
  */
 export function getGameForDate(date: string): Game {
   const gameId = `game_${date}`;
   const seedBase = hashDate(date);
-  const prevIndices = getVariantIndices(yesterday(date));
+  const cache = new Map<string, number[]>();
+
+  for (let d = AVOID_REPEAT_DAYS; d >= 1; d--) {
+    getActualVariantIndices(daysAgo(date, d), cache);
+  }
 
   const variantIndices: number[] = [];
+  const recentDays = Array.from({ length: AVOID_REPEAT_DAYS }, (_, i) => i + 1);
   for (let roundIndex = 0; roundIndex < ROUND_POOLS.length; roundIndex++) {
     const pool = ROUND_POOLS[roundIndex];
-    const prevIdx = prevIndices[roundIndex] ?? 0;
+    const recentForSlot = recentDays.map((d) => cache.get(daysAgo(date, d))?.[roundIndex] ?? -1);
     let variantIndex: number;
     if (roundIndex === 2) {
       const historicalStart = 2;
       const historicalCount = 3;
-      const localPrev = prevIdx - historicalStart;
-      const localNew = pickDifferentIndex(historicalCount, localPrev >= 0 ? localPrev : 0, seedBase + roundIndex);
+      const recentLocal = recentForSlot
+        .map((i) => (i >= historicalStart && i < historicalStart + historicalCount ? i - historicalStart : -1))
+        .filter((i) => i >= 0);
+      const localNew = pickIndexNotInRecent(historicalCount, recentLocal, seedBase + roundIndex);
       variantIndex = historicalStart + localNew;
-    } else if (roundIndex === 3) {
-      variantIndex = pickDifferentIndex(pool.length, prevIdx, seedBase + roundIndex);
     } else {
-      variantIndex = pickDifferentIndex(pool.length, prevIdx, seedBase + roundIndex);
+      variantIndex = pickIndexNotInRecent(pool.length, recentForSlot, seedBase + roundIndex);
     }
     variantIndices.push(variantIndex);
   }
 
-  // Enforce at most 1 fantasy round per game (user asked for 1 fantasy, 3–4 non-fantasy)
-  let fantasySlots = variantIndices
-    .map((idx, slot) => (ROUND_POOLS[slot][idx] as RoundDef).fantasy ? slot : -1)
-    .filter((s) => s >= 0);
-  if (fantasySlots.length > 1) {
-    for (let i = 1; i < fantasySlots.length; i++) {
-      const slot = fantasySlots[i];
-      const pool = ROUND_POOLS[slot];
-      let newIdx = (variantIndices[slot] + 1) % pool.length;
-      while ((pool[newIdx] as RoundDef).fantasy && newIdx !== variantIndices[slot]) {
-        newIdx = (newIdx + 1) % pool.length;
-      }
-      if (!(pool[newIdx] as RoundDef).fantasy) variantIndices[slot] = newIdx;
-    }
-  }
-  // If zero fantasy, force exactly one in slot 0 (pick a fantasy variant different from yesterday)
-  if (fantasySlots.length === 0) {
-    const pool0 = ROUND_POOLS[0];
-    const fantasyIndices = pool0.map((d, i) => ((d as RoundDef).fantasy ? i : -1)).filter((i) => i >= 0);
-    if (fantasyIndices.length > 0) {
-      const prev0 = prevIndices[0] ?? -1;
-      const chosen = fantasyIndices.find((i) => i !== prev0) ?? fantasyIndices[0];
-      variantIndices[0] = chosen;
-    }
-  }
+  applyFantasyAndRecentYearRules(variantIndices);
 
-  // At most 1 recent-year (2025) round per game — too easy if multiple
-  const MAX_RECENT_YEAR_ROUNDS = 1;
-  const slotsWithRecentYear = variantIndices
-    .map((idx, slot) => ((ROUND_POOLS[slot][idx] as RoundDef).recentYear ? slot : -1))
-    .filter((s) => s >= 0);
-  if (slotsWithRecentYear.length > MAX_RECENT_YEAR_ROUNDS) {
-    for (let i = 1; i < slotsWithRecentYear.length; i++) {
-      const slot = slotsWithRecentYear[i];
-      const pool = ROUND_POOLS[slot];
-      // Pick a non–recentYear variant
-      let newIdx = (variantIndices[slot] + 1) % pool.length;
-      let attempts = pool.length;
-      while (attempts-- > 0 && (pool[newIdx] as RoundDef).recentYear) {
-        newIdx = (newIdx + 1) % pool.length;
-      }
-      if (!(pool[newIdx] as RoundDef).recentYear) {
-        variantIndices[slot] = newIdx;
-      }
+  // Slot 0: never show a question used in the last AVOID_REPEAT_DAYS (including after fantasy rule)
+  const pool0 = ROUND_POOLS[0];
+  const fantasyIndices = pool0.map((d, i) => ((d as RoundDef).fantasy ? i : -1)).filter((i) => i >= 0);
+  const recent0 = recentDays.map((d) => cache.get(daysAgo(date, d))?.[0] ?? -1);
+  if (recent0.includes(variantIndices[0]) && pool0.length > 0) {
+    const avoid = new Set(recent0);
+    const notRecent = Array.from({ length: pool0.length }, (_, i) => i).filter((i) => !avoid.has(i));
+    if (notRecent.length > 0) {
+      variantIndices[0] = notRecent[Math.abs(seedBase) % notRecent.length];
+    } else {
+      const leastRecent = recent0[recent0.length - 1];
+      variantIndices[0] = fantasyIndices.includes(leastRecent) ? leastRecent : fantasyIndices[0] ?? 0;
+    }
+  }
+  if (fantasyIndices.length > 0) {
+    const hasFantasy = variantIndices.some((idx, slot) => (ROUND_POOLS[slot][idx] as RoundDef).fantasy);
+    if (!hasFantasy) {
+      const recent0Again = recentDays.map((d) => cache.get(daysAgo(date, d))?.[0] ?? -1);
+      const chosen =
+        fantasyIndices.find((i) => !recent0Again.includes(i)) ??
+        fantasyIndices.find((i) => i === recent0Again[recent0Again.length - 1]) ??
+        fantasyIndices[0];
+      variantIndices[0] = chosen;
     }
   }
 
